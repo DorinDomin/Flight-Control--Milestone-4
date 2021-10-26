@@ -1,0 +1,866 @@
+﻿<!DOCTYPE html>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Flight Simulator</title>
+    <link rel="shortcut icon" type="image/png" href="favicon.ico" />
+    <link href="bootstrap/css/all.min.css" rel="stylesheet" />
+    <style>
+        /*map style*/
+        #map {
+            height: 65%;
+            width: 60%;
+            border-radius: 0px;
+            box-shadow: 0 2px 10px 0 #d6d6d6,0 10px 12px 0 rgba(0,0,0,0.19);
+            left: 7%;
+            margin-top: 2%;
+            position: fixed;
+        }
+        /*page style*/
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            background-image: url("images/mon.jpg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: fixed;
+        }
+
+        /*bootstrap table header style*/
+        thead {
+            color: white;
+            font-family: "Arial Rounded MT", Helvetica, sans-serif;
+            font-weight: bold;
+            font-size: 110%;
+        }
+
+        /*information table*/
+        flightInfo {
+            border-radius: 0px;
+            border: 0px solid #0094ff;
+            box-shadow: 0 2px 10px 0 #d6d6d6,0 10px 12px 0 rgba(0,0,0,0.19);
+            background: rgba(255, 255, 255, 0.1);
+            width: 60%;
+            height: 19%;
+            font-family: "Trebuchet MS", Helvetica, sans-serif;
+            position: fixed;
+            margin-top: 2%;
+            left: 7%;
+        }
+            /*information table header style*/
+            flightInfo table thead th {
+                table-layout: auto;
+                text-align: center;
+                padding: 2px;
+            }
+
+            flightInfo table thead td {
+                table-layout: auto;
+                text-align: center;
+                padding: 2px;
+                word-wrap: break-word;
+                max-height: 12%;
+            }
+            /*information table header style*/
+            flightInfo table thead {
+                flex: 0 0 auto;
+                width: 100%;
+            }
+
+        /*flights table style*/
+        flights {
+            border-radius: 0px;
+            border: 0px solid #0094ff;
+            padding: 20px;
+            width: 19%;
+            height: 82%;
+            display: inline-block;
+            position: fixed;
+            right: 7%;
+            margin-top: 2%;
+            background: rgba(255, 255, 255, 0.2);
+            font-family: "Trebuchet MS", Helvetica, sans-serif;
+            box-shadow: 0 2px 10px 0 #d6d6d6,0 10px 12px 0 rgba(0,0,0,0.19);
+        }
+            /*hover on flights*/
+            flights tbody tr:hover {
+                color: #FFFFFF;
+                opacity: 0.5;
+                cursor: pointer;
+            }
+        /*drag style*/
+        .dropzone {
+            padding: 20px;
+            width: 19%;
+            height: 81%;
+            border: 2px dashed darkgray;
+            position: fixed;
+            right: 6%;
+            margin-top: 2%;
+            font-family: "Trebuchet MS", Helvetica, sans-serif;
+            display: none;
+            background-image: url("images/drop.jpg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: fixed;
+        }
+            /*drop style*/
+            .dropzone.dropover {
+                color: aqua;
+                border: aqua;
+            }
+
+        .beforeDrag {
+            opacity: 0;
+        }
+        /*table header style*/
+        table thead {
+            /* head takes the height it requires,
+        and it's not scaled when table is resized */
+            flex: 0 0 auto;
+            width: calc(100% - 0.9em);
+        }
+        /*table body style*/
+        table tbody {
+            /* body takes all the remaining available space */
+            flex: 1 1 auto;
+            display: block;
+            overflow-y: scroll;
+            height: 208px;
+            width: 103%;
+        }
+        /*information table body-style*/
+        flightInfo table tbody {
+            /* body takes all the remaining available space */
+            flex: 1 1 auto;
+            display: inline-block;
+            overflow-y: scroll;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+        }
+        /*information table cell-style*/
+        flightInfo td {
+            text-align: center;
+            padding: 2px;
+            color: white;
+            position: relative;
+            word-wrap: break-word;
+            max-width: 15%;
+        }
+
+        flights table tbody tr {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        /*information table row-style*/
+        table tbody tr {
+            width: 100%;
+        }
+
+        table thead,
+        table tbody tr {
+            display: table;
+            table-layout: fixed;
+        }
+        /*scrollbar style*/
+        tbody::-webkit-scrollbar {
+            width: 1em;
+        }
+
+        tbody::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+
+        tbody::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            outline: 1px solid slategrey;
+            border-radius: 10px;
+        }
+        /*external flights marker*/
+        .flightsLabel {
+            margin: auto;
+            width: 94%;
+            padding: 4%;
+            font-size: 100%;
+            color: black;
+            background: #e6e6e6;
+            opacity: 0.7;
+            text-align: center;
+            border-radius: 25px;
+            font-family: "Trebuchet MS", Helvetica, sans-serif;
+            margin-bottom: 3%;
+            margin-top: 3%;
+        }
+        /*flights table*/
+        .myFlightsTable {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 85%;
+        }
+        /*row of table*/
+        th {
+            text-align: center;
+            padding: 2px;
+            color: orange;
+            border-bottom: 0.5px solid #ffffff;
+        }
+        /*cell of table*/
+        td {
+            text-align: left;
+            padding: 2px;
+            color: white;
+            position: relative;
+            word-wrap: break-word;
+            max-width: 12%;
+        }
+
+        #myEFlights {
+            height: calc(100%-0.8em);
+        }
+        /*delete row from table*/
+        .close {
+            cursor: pointer;
+            position: absolute;
+            text-align: right;
+            right: 0%;
+            top: 50%;
+            padding: 2px 5px;
+            transform: translate(0%, -50%);
+        }
+            /*hover to delete*/
+            .close:hover {
+                color: red;
+                font-weight: bold;
+            }
+
+        @keyframes pulse {
+            0% {
+                transform: scale3d(1, 1, 1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale3d(2.2, 2.2, 1);
+                opacity: 0;
+            }
+        }
+        /*alert style*/
+        .alert {
+            padding: 0.4%;
+            font-size: 60%;
+            opacity: 0.95;
+            text-align: center;
+            border-radius: 7px;
+            border-bottom: 0.5px solid #ae2121;
+            font-family: "Trebuchet MS", Helvetica, sans-serif;
+            position: relative;
+            max-width: 100%;
+            background-color: #f9b5b5;
+            color: #ae2121;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="alert">
+        <strong id="alertM"></strong>
+        <span class="close" title="Delete"> <i class="fas fa-times" id="errorAlert"></i></span>
+    </div>
+    <div id="uploads"></div>
+    <div class="dropzone" id="dropzone"></div>
+
+    <div id="flightsBox">
+        <flights>
+            <table class="table myFlightsTable" id="myCFlights">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Company</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <p class="flightsLabel" id="fLable">
+                <b>
+                    <i class="fa fa-arrow-down" aria-hidden="true" style="margin-right:15%">
+
+                    </i>
+                    External-Flights <i class="fa fa-arrow-down" aria-hidden="true"
+                                        style="margin-left:15%"></i>
+                </b>
+            </p>
+            <table class="table myFlightsTable">
+                <tbody id="myEFlights">
+                </tbody>
+            </table>
+        </flights>
+    </div>
+
+    <div id="map"></div>
+
+
+    <flightInfo>
+        <table class="table myFlightsTable">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Company</th>
+                    <th>Passengers</th>
+                    <th>Start-Point</th>
+                    <th>End-Point</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                </tr>
+            </thead>
+            <tbody id="infoTable"> </tbody>
+        </table>
+    </flightInfo>
+
+    <script>
+        // mapping id to markers
+        const id2plane = new Map()
+        // selected object
+        const currentPath = new Map()
+        let myMap
+        // initial google map
+        function initMap() {
+            const markerImage = new google.maps.MarkerImage('images/Marker.png',
+                new google.maps.Size(30, 30),
+                new google.maps.Point(0, 0),
+                new google.maps.Point(15, 15))
+
+            const map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 6,
+                center: { lat: 32.0055, lng: 34.8854 },
+                mapTypeId: 'terrain'
+            })
+            myMap = map
+            // cancel any marked object style when clicking on map
+            myMap.addListener('click', function () {
+                // reset icons
+                id2plane.forEach(function (value, key) {
+                    value.setIcon(markerImage)
+                })
+                // reset row and path
+                currentPath.forEach(function (value, key) {
+                    value.setMap(null)
+                    currentPath.delete(key)
+                })
+                // reset info-table
+                const tableOfInfo = document.getElementById('infoTable')
+                while (tableOfInfo.rows.length > 0) {
+                    tableOfInfo.deleteRow(0)
+                }
+                const myTable = document.getElementById('myCFlights').getElementsByTagName(
+                    'tbody')[0]
+                const myExTable = document.getElementById('myEFlights')
+                for (var row of myTable.rows) {
+                    row.style.background = 'rgba(0, 0, 0, 0)'
+                }
+                for (var row of myExTable.rows) {
+                    row.style.background = 'rgba(0, 0, 0, 0)'
+                }
+            })
+        }
+        // alert error
+        function popAlert(text) {
+            const alertText = document.getElementById('alertM')
+            const alertObj = document.getElementById('errorAlert')
+            alertText.innerHTML = text
+            alertObj.parentElement.parentElement.style.display = 'block'
+            setTimeout(function () { alertObj.parentElement.parentElement.style.display = 'none' },
+                7000)
+        }
+        // json handler
+        (async function () {
+            const dropzone = document.getElementById('dropzone')
+            let prepareUpload = function (file) {
+                return {
+                    "method": "POST",
+                    "headers": { 'Content-Type': 'application/json;charset=utf-8' },
+                    "body": file
+                }
+            }
+            function handleFiles(files) {
+                ([...files].forEach(upload))
+            }
+            // ask for flightplan
+            const upload = async function (file) {
+                const postOptions = prepareUpload(file)
+                await fetch('api/FlightPlan', postOptions).then(response => {
+                    if (response.status == 400) {
+                        popAlert('Missing information in given Flight Plan')
+                    }
+                }).catch(error => popAlert(error))
+            }
+            // handle drag and drop
+            dropzone.ondrop = function (e) {
+                e.preventDefault()
+                this.className = 'dropzone'
+                handleFiles(e.dataTransfer.files)
+            }
+            dropzone.ondragover = function () {
+                this.className = 'dropzone dragover'
+                return false
+            }
+            dropzone.ondragleave = function () {
+                this.className = 'dropzone'
+                return false
+            }
+        }())
+        // handle drag and drop style
+        function setPortDrop() {
+            const drag = document.getElementById('dropzone')
+            const flyT = document.getElementById('flightsBox')
+            const alertXIcon = document.getElementById('errorAlert')
+            alertXIcon.addEventListener('click', function (event) {
+                this.parentElement.parentElement.style.display = 'none'
+            })
+            // drag area
+            flyT.addEventListener('dragover', function (event) {
+                this.style.display = 'none'
+                drag.style.display = 'block'
+            })
+            // element leaves the drop-zone
+            drag.addEventListener('dragleave', function (event) {
+                this.style.display = 'none'
+                flyT.style.display = 'block'
+            })
+            // on drop
+            drag.addEventListener('drop', function (event) {
+                this.style.display = 'none'
+                flyT.style.display = 'block'
+            })
+        }
+        window.onload = setPortDrop
+        // ask for relative flights
+        const myTable = document.getElementById('myCFlights').getElementsByTagName('tbody')[0]
+        const myExTable = document.getElementById('myEFlights')
+        const infoT = document.getElementById('infoTable')
+        async function updateLocalFlights() {
+            const now = new Date
+            const newDate = now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1)
+                .padStart(2, '0') + '-' + String(now.getUTCDate()).padStart(2, '0') + 'T' +
+                String(now.getUTCHours()).padStart(2, '0') + ':' + String(now.getUTCMinutes())
+                    .padStart(2, '0') + ':' + String(now.getUTCSeconds()).padStart(2, '0') + 'Z'
+            const response = await fetch('/api/Flights?relative_to=' + newDate.toString()
+                + '&sync_all').then(response => {
+                    if (response.status != 200) {
+                        throw ('Failed Updating Tables')
+                    }
+                    return Promise.resolve(response)
+                }).then(response => {
+                    response = response.json()
+                    return Promise.resolve(response)
+                }
+                ).then(response => updateLocalFlightsTable(response)).catch(
+                    error => popAlert(error))
+            /*console.log(response)
+            updateLocalFlightsTable(response)*/
+        }
+        // remove all markers
+        function removeAllMarkers(dict) {
+            if (dict.size > 0) {
+                for (let [key, value] of dict) {
+                    value.setMap(null)
+                    dict.delete(key)
+                }
+            }
+        }
+        // remove one marker
+        function removeMarker(dict, markerId) {
+            for (let [key, value] of dict) {
+                if (key == markerId) {
+                    value.setMap(null)
+                    dict.delete(key)
+                }
+            }
+        }
+        // reset icons
+        function clearIconsByKey(idKey, markerImage, plane) {
+            id2plane.forEach(function (value, key) {
+                if (key != idKey) {
+                    value.setIcon(markerImage)
+                }
+                if (value.position == plane.position) {
+                    plane.setMap(null)
+                    plane.setMap(myMap)
+                }
+            })
+        }
+        // handle click event in table
+        function tableOnClick(id) {
+            for (let j = 0; j < myTable.rows.length; j++) {
+                const row = myTable.rows[j]
+                if (row.cells[0].innerHTML == id)
+                    row.cells[0].click()
+            }
+            for (let j = 0; j < myExTable.rows.length; j++) {
+                const row = myExTable.rows[j]
+                if (row.cells[0].innerHTML == id)
+                    row.cells[0].click()
+            }
+        }
+        function clearInfoTable() {
+            for (var row of infoT.rows) {
+                infoT.deleteRow(row)
+            }
+        }
+        function clearInfoTableById(key) {
+            for (var row of infoT.rows) {
+                if (row.cells[0].innerHTML == key) {
+                    infoT.deleteRow(row)
+                }
+            }
+        }
+        function setMarkerImage(id, image, normalImage) {
+            if (id2plane.has(id)) {
+                const plane = id2plane.get(id)
+                plane.setIcon(image)
+                // handle click event in tables
+                tableOnClick(id)
+                // reset any other icon
+                clearIconsByKey(id, normalImage, plane)
+            }
+        }
+        async function addPlanToInfoTable(lineId, newcompany) {
+            // get relative flight-plan
+            let response = await fetch('/api/FlightPlan/' + lineId)
+                .then(response => {
+                    if (response.status != 200) {
+                        throw ('Failed Getting Flight Plan')
+                    }
+                    return Promise.resolve(response)
+                }).then(response => {
+                    response = response.json()
+                    return Promise.resolve(response)
+                }
+                ).catch(error =>
+                    popAlert(error))
+            if (response == null) {
+                return
+            }
+            clearInfoTable()
+            // add data to info-table
+            const x = infoT.insertRow(-1)
+            const idCell = x.insertCell(0)
+            const companyCell = x.insertCell(1)
+            const passCell = x.insertCell(2)
+            const startPCell = x.insertCell(3)
+            const endPCell = x.insertCell(4)
+            const startTCell = x.insertCell(5)
+            const endTCell = x.insertCell(6)
+            const initialState = response['initial_location']
+            const loc = initialState['latitude'] + ', ' +
+                initialState['longitude']
+            const segments = response['segments']
+            const lastLoc = segments[segments.length - 1]['latitude'] +
+                ', ' + segments[segments.length - 1]['longitude']
+            const time = new Date(initialState['date_time'])
+            const Stime = String(time.getUTCHours()).padStart(2, '0') +
+                ':' + String(time.getUTCMinutes()).padStart(2, '0') +
+                ':' + String(time.getUTCSeconds()).padStart(2, '0')
+
+            idCell.innerHTML = lineId
+            companyCell.innerHTML = newcompany
+            passCell.innerHTML = response['passengers']
+            startPCell.innerHTML = loc
+            startTCell.innerHTML = Stime
+            endPCell.innerHTML = lastLoc
+            // calculate ending time
+            let d = new Date((initialState['date_time']).toString())
+            let flightLine = [new google.maps.LatLng(
+                initialState['latitude'],
+                initialState['longitude'])]
+            // alert(flightLine);
+            for (var seg of segments) {
+                d.setSeconds(d.getSeconds() + parseInt(
+                    (seg['timespan_seconds']).toString()))
+                flightLine.push(new google.maps.LatLng(seg['latitude'],
+                    seg['longitude']))
+            }
+
+            const endT = String(d.getUTCHours()).padStart(2, '0') +
+                ':' + String(d.getUTCMinutes()).padStart(2, '0') +
+                ':' + String(d.getUTCSeconds()).padStart(2, '0')
+            endTCell.innerHTML = endT
+            const lineSymbol = {
+                path: 'M 0,-1 0,1',
+                strokeOpacity: 1,
+                scale: 4
+            }
+            // new flight-path
+            const flightPath = new google.maps.Polyline({
+                path: flightLine,
+                strokeColor: '#000000',
+                strokeOpacity: 0,
+                icons: [{
+                    icon: lineSymbol,
+                    offset: '0',
+                    repeat: '20px'
+                }]
+            })
+            removeAllMarkers(currentPath)
+            currentPath.set(lineId, flightPath)
+            flightPath.setMap(myMap)
+        }
+        async function handleFlightsPlan(lineId, newcompany) {
+            for (var row of myTable.rows) {
+                if (row.cells[0].innerHTML == lineId) {
+                    addPlanToInfoTable(lineId, newcompany)
+                }
+            }
+        }
+        async function handleExFlightsPlan(lineId, newcompany) {
+            for (var row of myExTable.rows) {
+                if (row.cells[0].innerHTML == lineId) {
+                    addPlanToInfoTable(lineId, newcompany)
+                }
+            }
+        }
+        function handleFlights(newid, newcompany) {
+            let flag = false
+            for (var row of myTable.rows) {
+                if (row.cells[0].innerHTML == newid) {
+                    flag = true
+                }
+            }
+            if (!flag) {
+                // insert new row to table
+                const x = myTable.insertRow(-1)
+                const y = x.insertCell(0)
+                const z = x.insertCell(1)
+                const w = x.insertCell(2)
+                // update info in row
+                y.innerHTML = newid
+                y.title = newid
+                z.innerHTML = newcompany
+                z.title = newcompany
+                w.innerHTML =
+                    '<span class="close" title="Delete"><i class="fas fa-times"></i></span>'
+                // mark row in flights table
+                if (currentPath.has(y.innerHTML)) {
+                    x.style.background = 'rgba(0, 0, 0, 0.3)'
+                    // show path if got pressed
+                    currentPath.get(newid).setMap(myMap)
+                }
+                // handle delete row
+                w.addEventListener('click', async function () {
+                    const key = (this.parentElement).cells[0].innerHTML
+                    x.style.display = 'none'
+                    // remove from map
+                    removeMarker(id2plane, key)
+                    removeMarker(currentPath, key)
+                    // delete from info-table
+                    clearInfoTableById(key)
+                    // delete flight from server
+                    await fetch('/api/Flights/' + key, {
+                        method: 'DELETE'
+                    }).then(response => {
+                        if (response.status != 200) {
+                            throw ('Failed Deleting Flight')
+                        }
+                    }).catch(error => popAlert(error))
+                })
+                // handle click on row event
+                y.addEventListener('click', function () {
+                    const lineId = (this.parentElement).cells[0].innerHTML
+                    // change plane icon
+                    const markerImage = new google.maps.MarkerImage('images/Marker.png',
+                        new google.maps.Size(30, 30),
+                        new google.maps.Point(0, 0),
+                        new google.maps.Point(15, 15))
+                    const markerImageOrange = new google.maps.MarkerImage(
+                        'images/OrangeMarker.png',
+                        new google.maps.Size(30, 30),
+                        new google.maps.Point(0, 0),
+                        new google.maps.Point(15, 15))
+                    setMarkerImage(lineId, markerImageOrange, markerImage)
+                    removeAllMarkers(currentPath)
+                    // clear info-table
+                    clearInfoTable()
+                    // show relative flight-plan
+                    handleFlightsPlan(lineId, newcompany)
+                    removeChosenFlight()
+                    this.parentElement.style.background = 'rgba(0, 0, 0, 0.3)'
+                })
+                // handle click event on row
+                z.addEventListener('click', function () {
+                    const relativeY = (this.parentElement).cells[0]
+                    relativeY.click()
+                })
+            }
+        }
+        function handleExFlights(newid, newcompany) {
+            let flag = false
+            for (var row of myExTable.rows) {
+                if (row.cells[0].innerHTML == newid) {
+                    flag = true
+                }
+            }
+            if (!flag) {
+                // add new row to ex-table
+                const x = myExTable.insertRow(-1)
+                const y = x.insertCell(0)
+                const z = x.insertCell(1)
+                const w = x.insertCell(2)
+                y.innerHTML = newid
+                y.title = newid
+                z.innerHTML = newcompany
+                z.title = newcompany
+                // mark row in flights table
+                if (currentPath.has(newid)) {
+                    x.style.background = 'rgba(0, 0, 0, 0.3)'
+                    // show path if got pressed
+                    currentPath.get(newid).setMap(myMap)
+                }
+
+                x.addEventListener('click', async function () {
+                    const lineId = (this.getElementsByTagName('td')[0]).innerHTML.toString()
+                    // change plane icon
+                    const markerImage = new google.maps.MarkerImage('images/Marker.png',
+                        new google.maps.Size(30, 30),
+                        new google.maps.Point(0, 0),
+                        new google.maps.Point(15, 15))
+                    const markerImageOrange = new google.maps.MarkerImage(
+                        'images/OrangeMarker.png',
+                        new google.maps.Size(30, 30),
+                        new google.maps.Point(0, 0),
+                        new google.maps.Point(15, 15))
+                    setMarkerImage(lineId, markerImageOrange, markerImage)
+                    removeAllMarkers(currentPath)
+                    // clear info-table
+                    clearInfoTable()
+                    handleExFlightsPlan(lineId, newcompany)
+                    removeChosenFlight()
+                    this.style.background = 'rgba(0, 0, 0, 0.3)'
+                })
+            }
+        }
+        function handleCurrentPath() {
+            currentPath.forEach(function (value, key) {
+                if (!id2plane.has(key) || value.map == null) {
+                    clearInfoTableById(key)
+                    removeMarker(currentPath, key)
+                    removeMarker(id2plane, key)
+                }
+            })
+        }
+        function removeChosenFlight() {
+            const myTable = document.getElementById('myCFlights').getElementsByTagName('tbody')[0]
+            const myExTable = document.getElementById('myEFlights')
+            for (var row of myTable.rows) {
+                row.style.background = 'rgba(0, 0, 0, 0)'
+            }
+            for (var row of myExTable.rows) {
+                row.style.background = 'rgba(0, 0, 0, 0)'
+            }
+        }
+        function compareAndDelete(key) {
+            let flagr = false
+            for (var row of myTable.rows) {
+                if (row.cells[0].innerHTML == key) {
+                    flagr = true
+                    break
+                }
+            }
+            // remove null markers from ex-flights-table
+            for (var exrow of myExTable.rows) {
+                if (exrow.cells[0].innerHTML == key) {
+                    flagr = true
+                    break
+                }
+            }
+            if (!flagr) {
+                removeMarker(id2plane, key)
+            }
+        }
+        function removeNullMarkers() {
+            for (let [key, value] of id2plane) {
+                compareAndDelete(key)
+            }
+        }
+        // update local flights in tables
+        async function updateLocalFlightsTable(data) {
+            // clear tables
+            while (myTable.rows.length > 0) {
+                myTable.deleteRow(0)
+            }
+            while (myExTable.rows.length > 0) {
+                myExTable.deleteRow(0)
+            }
+            currentPath.forEach(function (value, key) {
+                value.setMap(null)
+            })
+            // add data to tables
+            for (let i = 0; i < data.length; i++) {
+                const newid = data[i]['flight_id']
+                const newcompany = data[i]['company_name']
+                const isExternal = data[i]['is_external']
+                const newLat = data[i]['latitude']
+                const newLong = data[i]['longitude']
+                const myLatLng = new google.maps.LatLng(newLat, newLong)
+                if (id2plane.has(newid)) {
+                    id2plane.get(newid).setPosition(myLatLng)
+                }
+
+                // add data[i] as marker to hash-map
+                else {
+                    // marker special icons
+                    const markerImage = new google.maps.MarkerImage('images/Marker.png',
+                        new google.maps.Size(30, 30),
+                        new google.maps.Point(0, 0),
+                        new google.maps.Point(15, 15))
+                    const markerImageOrange = new google.maps.MarkerImage(
+                        'images/OrangeMarker.png',
+                        new google.maps.Size(30, 30),
+                        new google.maps.Point(0, 0),
+                        new google.maps.Point(15, 15))
+                    const marker = new google.maps.Marker({
+                        position: myLatLng,
+                        icon: markerImage
+                    })
+                    // add marker to map
+                    marker.setMap(myMap)
+                    // set marker on click
+                    marker.addListener('click', function () {
+                        setMarkerImage(newid, markerImageOrange, markerImage)
+                    })
+                    // add marker to map
+                    id2plane.set(newid, marker)
+                }
+                // add flights to the relative table
+                if (!isExternal) {
+                    handleFlights(newid, newcompany)
+                }
+                // handle ex-flights
+                else {
+                    handleExFlights(newid, newcompany)
+                }
+            }
+            // clear map from old markers
+            handleCurrentPath()
+            // remove null markers from flights-table
+            removeNullMarkers()
+        }
+        // update data every x seconds
+        (function () {
+            setInterval(function () {
+                updateLocalFlights()
+            }, 1000)
+        }())
+
+    </script>
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBoF_pogOM9WNXYtbJgCNnzJzoKGLlldcE&callback=initMap">
+    </script>
+</body>
+</html>
